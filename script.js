@@ -5,10 +5,10 @@ let ticketId;
 let projectDetails;
 let responseData;
 
-const BASE_URL = "http://127.0.0.1:9000";
-const BASE_PATH = "localhost:9000"
-/* const BASE_URL = "https://app.userscom.com"; */
-/* const BASE_PATH="userscom.com" */
+// const BASE_URL = "http://127.0.0.1:9000";
+// const BASE_PATH = "localhost:9000"
+const BASE_URL = "https://app.userscom.com";
+const BASE_PATH="userscom.com"
 let IFRAME_URL = BASE_PATH+"/widget-home?iframe=active";
 
 // const BASE_URL = "https://app.userscom.com";
@@ -71,7 +71,7 @@ window.addEventListener("message", function (event) {
   if (event.data === "openTicketsPage" && !isLoaded) {
     console.log("openTicketsPage...");
     IFRAME_URL = BASE_PATH+"/my-tickets?iframe=active";
-    iframe.src = `http://${projectDetails?.slug}.${IFRAME_URL}`;
+    iframe.src = `https://${projectDetails?.slug}.${IFRAME_URL}`;
     
     iframe.onload = () => {
       main_widget.style.display = "block";
@@ -732,7 +732,7 @@ font-size:0.9rem;
   main_widget.id = "userscom-form";
 
   console.log("userAttributes...", userAttributes);
-  iframe.src = `http://${projectDetails?.slug}.${IFRAME_URL}`;
+  iframe.src = `https://${projectDetails?.slug}.${IFRAME_URL}`;
   console.log("source...", iframe.src);
   chatIframe = iframe;
   
