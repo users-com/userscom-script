@@ -16,10 +16,12 @@ let userAttributes = {};
 window.userscomMessageQueue = [];
 let chatIframe = null;
 let isLoaded = false;
+let iframeLoaded = false;
 
 // Create form
 var main_widget = document.createElement("div");
 main_widget.className = "form-container";
+main_widget.style.display = "none";
 var iframe = document.createElement("iframe");
 const sendMessageToIframe = (attributes) => {
   if (chatIframe && projectDetails?.slug) {
@@ -94,6 +96,14 @@ const userscom = {
     },
   },
 };
+
+function updateButtonVisibility(img) {
+  if (iframeLoaded) {
+    img.style.display = "flex"; 
+  } else {
+    img.style.display = "none";
+  }
+}
 
 // Define the custom element tag
 function ChatBox() {
@@ -691,6 +701,9 @@ font-size:0.9rem;
     img.className = "open-button";
   }
 
+  // Initially hide the button until iframe loads
+  img.style.display = "none";
+
   // Create chat popup
   var chatPopup = document.createElement("div");
   if (position && position == "bl") {
@@ -706,6 +719,7 @@ font-size:0.9rem;
   } else {
     welcomeMsg.className = "welcomeMsg";
   }
+  welcomeMsg.style.display = "none"; 
 
   var unreadCounter = document.createElement("div");
   unreadCounter.innerHTML = 3;
@@ -721,14 +735,24 @@ font-size:0.9rem;
   iframe.src = `http://${projectDetails?.slug}.${IFRAME_URL}`;
   console.log("source...", iframe.src);
   chatIframe = iframe;
+  
   iframe.onload = () => {
+    iframeLoaded = true;
     // Send any pending messages
     if (pendingMessages.length > 0) {
       pendingMessages.forEach((attributes) => {
         sendMessageToIframe(attributes);
       });
-      pendingMessages = []; // Clear the queue after sending
+      pendingMessages = []; 
     }
+    
+    img.style.display = "flex";
+    
+    setTimeout(function () {
+      if (welcomeText) {
+        welcomeMsg.style.display = "block";
+      }
+    }, 7000);
   };
 
   iframe.style.setProperty("width", "100%", "important");
@@ -741,12 +765,8 @@ font-size:0.9rem;
   // Append form to chat popup
   chatPopup.appendChild(main_widget);
   chatPopup.appendChild(img);
-
-  setTimeout(function () {
-    if (welcomeText) {
-      chatPopup.appendChild(welcomeMsg);
-    }
-  }, 7000);
+  chatPopup.appendChild(welcomeMsg);
+  
   userscomRoot.appendChild(chatPopup);
 
   img.addEventListener("click", function () {
