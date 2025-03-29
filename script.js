@@ -1,90 +1,109 @@
-const reference = document.getElementById("userscom-chat").getAttribute("data-reference");
+const reference = document
+  .getElementById("userscom-chat")
+  .getAttribute("data-reference");
 let ticketId;
 let projectDetails;
 let responseData;
 
 const BASE_URL = "http://127.0.0.1:9000";
-const IFRAME_URL = "localhost:9000?iframe=active";
+const BASE_PATH = "localhost:9000"
+/* const BASE_URL = "https://app.userscom.com"; */
+/* const BASE_PATH="userscom.com" */
+let IFRAME_URL = BASE_PATH+"/widget-home?iframe=active";
+
 // const BASE_URL = "https://app.userscom.com";
 let userAttributes = {};
 window.userscomMessageQueue = [];
 let chatIframe = null;
+let isLoaded = false;
 
-  // Create form
-  var form = document.createElement("div");
-  form.className = "form-container";
+// Create form
+var main_widget = document.createElement("div");
+main_widget.className = "form-container";
 var iframe = document.createElement("iframe");
 const sendMessageToIframe = (attributes) => {
   if (chatIframe && projectDetails?.slug) {
     const message = {
-      type: 'userAttributes',
+      type: "userAttributes",
       userAttributes: JSON.stringify(attributes),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     // Send message to iframe without checking route
     chatIframe.contentWindow.postMessage(
       message,
-      `http://${projectDetails?.slug}.${IFRAME_URL}`
+      `https://${projectDetails?.slug}.${IFRAME_URL}`
     );
-    console.log('Sending message to iframe:', message);
+    console.log("Sending message to iframe:", message);
   }
 };
 
 // Keep track of messages locally
 let pendingMessages = [];
 
-document.addEventListener('updateUserAttributes', (event) => {
+document.addEventListener("updateUserAttributes", (event) => {
   userAttributes = event.detail;
-  console.log('userAttributes updated:', userAttributes);
+  console.log("userAttributes updated:", userAttributes);
   pendingMessages.push(userAttributes);
   sendMessageToIframe(userAttributes);
 });
 
-window.addEventListener("message", function(event) {
+window.addEventListener("message", function (event) {
   if (event.data === "updateUserAttributes") {
-    sendMessageToIframe(userAttributes)
+    sendMessageToIframe(userAttributes);
   }
   if (event.data === "increaseWidth") {
     const width = "700px";
     iframe.style.width = width;
-    form.style.setProperty("width", width, "important");
-    form.style.setProperty("max-width", width, "important");
-    
+    main_widget.style.setProperty("width", width, "important");
+    main_widget.style.setProperty("max-width", width, "important");
+
     // iframe.style.height = routeDimensions[route].height;
   }
-  if(event.data === "resetWidth"){
+  if (event.data === "resetWidth") {
     const width = "400px";
     iframe.style.width = width;
-    form.style.setProperty("width", width, "important");
-    form.style.setProperty("max-width", width, "important");
+    main_widget.style.setProperty("width", width, "important");
+    main_widget.style.setProperty("max-width", width, "important");
+  }
+  if (event.data === "openTicketsPage" && !isLoaded) {
+    console.log("openTicketsPage...");
+    IFRAME_URL = BASE_PATH+"/my-tickets?iframe=active";
+    iframe.src = `http://${projectDetails?.slug}.${IFRAME_URL}`;
+    
+    iframe.onload = () => {
+      main_widget.style.display = "block";
+    };
+
+    
+    isLoaded = true;
   }
 });
-
 
 const userscom = {
   user: {
     set(options) {
       if (options) {
         Object.assign(this, options);
-        console.log('User properties updated:', this);
-        const event = new CustomEvent('updateUserAttributes', { detail: this });
+        console.log("User properties updated:", this);
+        const event = new CustomEvent("updateUserAttributes", { detail: this });
         document.dispatchEvent(event);
       } else {
-        console.error('No options provided');
+        console.error("No options provided");
       }
-    }
-  }
-}
-
-
+    },
+  },
+};
 
 // Define the custom element tag
 function ChatBox() {
-
-  const welcomeText = projectDetails && projectDetails.welcome_text || 'Need Help'
-  const position = projectDetails && projectDetails.position || 'br'
-  const image = projectDetails && projectDetails.image ? 'https://assets.userscom.com/'+projectDetails.image : 'https://assets.userscom.com/project_avatar.jpg'
+  const welcomeText =
+    (projectDetails && projectDetails.welcome_text) || "Need Help";
+  const position = (projectDetails && projectDetails.position) || "br";
+  const image =
+    projectDetails && projectDetails.image
+      ? "https://assets.userscom.com/" + projectDetails.image
+      : "https://assets.userscom.com/project_avatar.jpg";
   // Create styles
   const styles = `
 
@@ -272,11 +291,13 @@ input[id=radio-2]:checked ~ .glider {
     /* Add styles to the form container */
     .form-container {
       display:none;
+          height: calc(100vh - 150px);
+    max-height: 700px;
       max-width: 400px;
       width:370px;
       position:relative;
       border-radius:20px;
-      background:linear-gradient(36deg, rgb(177 201 255), rgb(255 255 255));
+      // background:linear-gradient(36deg, rgb(177 201 255), rgb(255 255 255));
       overflow: hidden;
     position: relative;
     box-shadow:rgba(0, 0, 0, 0.16) 0px 5px 40px;
@@ -611,157 +632,143 @@ font-size:0.9rem;
 }
 
   `;
-  
-  var parentDiv = document.createElement('div');
+
+  var parentDiv = document.createElement("div");
   document.body.append(parentDiv);
-  const userscomRoot = parentDiv.attachShadow({ mode: 'open' });
+  const userscomRoot = parentDiv.attachShadow({ mode: "open" });
 
-  const style = document.createElement('style');
+  const style = document.createElement("style");
 
-  const linkElement = document.createElement('link');
-linkElement.rel = 'stylesheet';
-linkElement.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
+  const linkElement = document.createElement("link");
+  linkElement.rel = "stylesheet";
+  linkElement.href =
+    "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap";
 
-// Append the link element to the shadow DOM root
-document.head.appendChild(linkElement);
+  // Append the link element to the shadow DOM root
+  document.head.appendChild(linkElement);
 
-
-  const styleElement = document.createElement('style');
+  const styleElement = document.createElement("style");
   styleElement.textContent = styles;
 
   // Append the style element to the shadow DOM
   userscomRoot.appendChild(styleElement);
 
-  
   let uploadedFile = null;
   // const styleSheet = new CSSStyleSheet();
   // styleSheet.replaceSync(styles);
   // userscomRoot.adoptedStyleSheets = [styleSheet];
-  
+
   // Create chat button
-  if(projectDetails && projectDetails.icon != 'image')
-  {
+  if (projectDetails && projectDetails.icon != "image") {
     var img = document.createElement("div");
     var svg;
 
     switch (projectDetails.icon) {
-      case '1':
-        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97z" clip-rule="evenodd" /></svg>';
+      case "1":
+        svg =
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97z" clip-rule="evenodd" /></svg>';
         break;
 
-      case '2':
-        svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M5.337 21.718a6.707 6.707 0 01-.533-.074.75.75 0 01-.44-1.223 3.73 3.73 0 00.814-1.686c.023-.115-.022-.317-.254-.543C3.274 16.587 2.25 14.41 2.25 12c0-5.03 4.428-9 9.75-9s9.75 3.97 9.75 9c0 5.03-4.428 9-9.75 9-.833 0-1.643-.097-2.417-.279a6.721 6.721 0 01-4.246.997z" clip-rule="evenodd" /></svg>';
+      case "2":
+        svg =
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M5.337 21.718a6.707 6.707 0 01-.533-.074.75.75 0 01-.44-1.223 3.73 3.73 0 00.814-1.686c.023-.115-.022-.317-.254-.543C3.274 16.587 2.25 14.41 2.25 12c0-5.03 4.428-9 9.75-9s9.75 3.97 9.75 9c0 5.03-4.428 9-9.75 9-.833 0-1.643-.097-2.417-.279a6.721 6.721 0 01-4.246.997z" clip-rule="evenodd" /></svg>';
         break;
 
-      case '3':
-        svg = '<svg class="w-6 h-6 text-gray-700"  viewBox="0 0 364 364" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M327.6 0H36.4C26.7461 0 17.4876 3.83496 10.6613 10.6612C3.83499 17.4875 0 26.746 0 36.3998V254.798C0 264.452 3.83499 273.711 10.6613 280.537C17.4876 287.363 26.7461 291.198 36.4 291.198H91V345.798C91.0097 349.228 91.9888 352.586 93.8242 355.484C95.6597 358.382 98.2769 360.703 101.374 362.178C103.794 363.418 106.481 364.043 109.2 363.998C113.305 363.974 117.282 362.563 120.484 359.994L206.57 291.198H327.6C337.254 291.198 346.512 287.363 353.339 280.537C360.165 273.711 364 264.452 364 254.798V36.3998C364 26.746 360.165 17.4875 353.339 10.6612C346.512 3.83496 337.254 0 327.6 0Z" fill="currentColor" /></svg>';
+      case "3":
+        svg =
+          '<svg class="w-6 h-6 text-gray-700"  viewBox="0 0 364 364" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M327.6 0H36.4C26.7461 0 17.4876 3.83496 10.6613 10.6612C3.83499 17.4875 0 26.746 0 36.3998V254.798C0 264.452 3.83499 273.711 10.6613 280.537C17.4876 287.363 26.7461 291.198 36.4 291.198H91V345.798C91.0097 349.228 91.9888 352.586 93.8242 355.484C95.6597 358.382 98.2769 360.703 101.374 362.178C103.794 363.418 106.481 364.043 109.2 363.998C113.305 363.974 117.282 362.563 120.484 359.994L206.57 291.198H327.6C337.254 291.198 346.512 287.363 353.339 280.537C360.165 273.711 364 264.452 364 254.798V36.3998C364 26.746 360.165 17.4875 353.339 10.6612C346.512 3.83496 337.254 0 327.6 0Z" fill="currentColor" /></svg>';
         break;
 
       default:
     }
 
-    console.log('svg')
+    console.log("svg");
     img.innerHTML = svg;
     img.className = "open-button";
-
-
-  }
-  else{
+  } else {
     var img = document.createElement("img");
-    img.src=  image;
+    img.src = image;
     img.className = "open-button";
   }
 
   // Create chat popup
   var chatPopup = document.createElement("div");
-  if(position && position == 'bl')
-  {
+  if (position && position == "bl") {
     chatPopup.className = "chat-popup-left";
-  }
-  else{
+  } else {
     chatPopup.className = "chat-popup";
   }
 
   var welcomeMsg = document.createElement("div");
-  welcomeMsg.innerHTML=welcomeText
-  if(position == 'bl')
-  {
-    welcomeMsg.className = 'welcomeMsgLeft'
-  }
-  else{
+  welcomeMsg.innerHTML = welcomeText;
+  if (position == "bl") {
+    welcomeMsg.className = "welcomeMsgLeft";
+  } else {
     welcomeMsg.className = "welcomeMsg";
   }
 
-  form.id = "userscom-form";
+  var unreadCounter = document.createElement("div");
+  unreadCounter.innerHTML = 3;
+  if (position == "bl") {
+    unreadCounter.className = "unreadCounterLeft";
+  } else {
+    unreadCounter.className = "unreadCounter";
+  }
 
+  main_widget.id = "userscom-form";
 
-    
-    console.log('userAttributes...', userAttributes)
-    iframe.src = `http://${projectDetails?.slug}.${IFRAME_URL}`;
-    // iframe.onload = () => {
-    //     const safeUserAttributes = JSON.stringify(userAttributes);
-    //     iframe.contentWindow.postMessage(
-    //         { userAttributes: safeUserAttributes },
-    //         `http://${projectDetails?.slug}.localhost:9000?iframe=active`
-    //     );
-    // };
-
+  console.log("userAttributes...", userAttributes);
+  iframe.src = `http://${projectDetails?.slug}.${IFRAME_URL}`;
+  console.log("source...", iframe.src);
   chatIframe = iframe;
   iframe.onload = () => {
     // Send any pending messages
     if (pendingMessages.length > 0) {
-      pendingMessages.forEach(attributes => {
+      pendingMessages.forEach((attributes) => {
         sendMessageToIframe(attributes);
       });
       pendingMessages = []; // Clear the queue after sending
     }
   };
 
+  iframe.style.setProperty("width", "100%", "important");
+  iframe.style.setProperty("height", "100%", "important");
 
-    iframe.style.width = "100%";
-    iframe.style.height = "500px";
-    iframe.style.border = "none";
-
-    // Append iframe to form
-    form.appendChild(iframe);
+  iframe.style.border = "none";
+  // Append iframe to form
+  main_widget.appendChild(iframe);
 
   // Append form to chat popup
-  chatPopup.appendChild(form);
-  chatPopup.appendChild(img)
-  
-  setTimeout(function(){ 
-    if(welcomeText)
-    {
-      chatPopup.appendChild(welcomeMsg)
-    }
+  chatPopup.appendChild(main_widget);
+  chatPopup.appendChild(img);
 
-   }, 7000);
+  setTimeout(function () {
+    if (welcomeText) {
+      chatPopup.appendChild(welcomeMsg);
+    }
+  }, 7000);
   userscomRoot.appendChild(chatPopup);
 
-
   img.addEventListener("click", function () {
-    
-    if(form.style.display==='block'){
-      form.style.display = "none";
-     
-    }else{
-      form.style.display = "block";
-      welcomeMsg.style.display="none"
+    if (main_widget.style.display === "block") {
+      main_widget.style.display = "none";
+    } else {
+      console.log("clicked...");
+      main_widget.style.display = "block";
+      welcomeMsg.style.display = "none";
     }
   });
-
-
 }
 
 if (reference) {
-  fetch(`${BASE_URL}/api/project/details/${reference}`, { method: 'GET' })
-    .then(response => response.json())
-    .then(data => {
+  fetch(`${BASE_URL}/api/project/details/${reference}`, { method: "GET" })
+    .then((response) => response.json())
+    .then((data) => {
       localStorage.setItem("userscomPlan", data.plan);
       projectDetails = data;
       ChatBox();
     })
-    .catch(error => {
-      console.error('Error:', error);
+    .catch((error) => {
+      console.error("Error:", error);
     });
 }
